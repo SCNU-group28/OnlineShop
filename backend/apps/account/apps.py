@@ -1,6 +1,7 @@
 from django.apps import AppConfig
 
 
-class ApisConfig(AppConfig):
+class AccountConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'apis'
+    name = 'apps.account'
+    verbose_name = "用户管理"

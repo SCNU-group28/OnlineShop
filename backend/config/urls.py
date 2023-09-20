@@ -15,9 +15,17 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path,include
+from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
+# from apps.derivatives.views import QuotationView 这玩意是金融衍生品
+
 
 urlpatterns = [
-    path("login/", include("login.urls")),
-    path('admin/', admin.site.urls),
+    path('admin/', admin.site.urls, name='django_admin'),   # Django admin
+    path('api/', include('apps.api.urls'), name='api'),     # Api router
+    # path('tinymce/', include('tinymce.urls'), name='tinymce'), # TinyMCE
 ]
+
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

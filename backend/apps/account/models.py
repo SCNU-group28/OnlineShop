@@ -1,0 +1,62 @@
+from django.db import models
+from django.contrib.auth.models import AbstractUser
+from django.utils.translation import gettext_lazy as _
+
+
+class CustomUser(AbstractUser):
+    """自定义用户模型"""
+    first_name = models.CharField(
+        _("first name"),
+        max_length=150
+    )
+    last_name = models.CharField(
+        _("last name"),
+        max_length=150
+    )
+    email = models.EmailField(
+        _("email address")
+    )
+    gender = models.CharField(
+        max_length=10,
+        choices=(
+            ("male", "男"),
+            ("female", "女"),
+        ),
+        verbose_name="性别",
+    )
+    phone = models.CharField(
+        max_length=11,
+        verbose_name="手机"
+    )
+    user_type = models.CharField(
+        max_length=10,
+        choices=(
+            ("individual", "个人"),
+            ("enterprise", "企业"),
+        ),
+        verbose_name="用户类型"
+    )
+    company = models.CharField(
+        max_length=255,
+        verbose_name="公司"
+    )
+    position = models.CharField(
+        max_length=255,
+        verbose_name="职位"
+    )
+    wx_openid = models.CharField(
+        max_length=255,
+        verbose_name="微信openid",
+        unique=True,
+        null=True,
+        blank=True
+    )
+
+    @property
+    def fullname(self):
+        return f"{self.last_name}{self.first_name}"
+    fullname.fget.short_description = "姓名"
+    
+    class Meta:
+        verbose_name = verbose_name_plural = "用户"
+        

@@ -1,4 +1,4 @@
-from apis.exceptions import ApplicationError
+from apps.api.exceptions import ApplicationError
 from django.core.exceptions import PermissionDenied
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.http import Http404
