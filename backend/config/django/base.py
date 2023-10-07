@@ -70,7 +70,6 @@ THIRD_PARTY_APPS = [
     'import_export'
 ]
 
-
 INSTALLED_APPS = [
     'daphne',
     'django.contrib.admin',
