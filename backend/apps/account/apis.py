@@ -15,7 +15,6 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-
 from .models import CustomUser
 from .serializers import UserLoginSerializer, UserSerializer
 
@@ -266,3 +265,56 @@ class WXBindApi(APIView):
 
     def post(self, request: Request) -> Response:
         pass
+
+
+class WXTrialApi(APIView):
+    """微信小程序试用接口
+
+    利用微信openid查询, 如果用户不存在则创建
+    """
+    permission_classes = []
+
+    def get_wx_userid(self, code: str) -> str:
+        appid = os.environ.get("WX_APPID", None)
+        appsecret = os.environ.get("WX_APPSECRET", None)
+        if appid is None or appsecret is None:
+            raise ApplicationError("微信登录功能未启用")
+        base_url = 'https://api.weixin.qq.com/sns/jscode2session'
+        url = "{}?appid={}&secret={}&js_code={}&grant_type=authorization_code".format(
+            base_url, appid, appsecret, code
+        )
+        response = requests.get(url)
+        try:
+            wx_openid: str = response.json()['openid']
+        except KeyError:  # 未获取到openid
+            raise ApplicationError(
+                message=response.json().get('errmsg'),
+                extra={
+                    "errcode": response.json().get('errcode'),
+                    "reference": "https://developers.weixin.qq.com/doc/oplatform/Return_codes/Return_code_descriptions_new.html"
+                }
+            )
+        else:
+            return wx_openid
+
+    def post(self, request: Request) -> Response:
+        code = request.data.get("code", None)
+        if code is None:
+            raise ApplicationError(
+                message="Wechat code not provided",
+                extra={
+                    "reference": "https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html#0"
+                }
+            )
+        wx_openid = self.get_wx_userid(code)
+        if wx_openid:  # openid不为空
+            user = get_user_model().objects.get_or_create(wx_openid=wx_openid)
+            refresh: RefreshToken = RefreshToken.for_user(user)
+            return Response({
+                "username": user.username,
+                "refresh": str(refresh),
+                "access": str(refresh.access_token),
+                "expire": refresh.access_token.payload["exp"] - refresh.access_token.payload["iat"],
+            })
+        else:  # openid为空
+            raise ApplicationError("Wechat user openid is empty")
