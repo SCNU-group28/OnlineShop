@@ -7,14 +7,17 @@ class CustomUser(AbstractUser):
     """自定义用户模型"""
     first_name = models.CharField(
         _("first name"),
-        max_length=150
+        max_length=150,
+        default=""
     )
     last_name = models.CharField(
         _("last name"),
-        max_length=150
+        max_length=150,
+        default=""
     )
     email = models.EmailField(
-        _("email address")
+        _("email address"),
+        default="example@example.com"
     )
     gender = models.CharField(
         max_length=10,
@@ -23,10 +26,12 @@ class CustomUser(AbstractUser):
             ("female", "女"),
         ),
         verbose_name="性别",
+        default=""
     )
     phone = models.CharField(
         max_length=11,
-        verbose_name="手机"
+        verbose_name="手机",
+        default=""
     )
     user_type = models.CharField(
         max_length=10,
@@ -34,15 +39,18 @@ class CustomUser(AbstractUser):
             ("individual", "个人"),
             ("enterprise", "企业"),
         ),
-        verbose_name="用户类型"
+        verbose_name="用户类型",
+        default="individual"
     )
     company = models.CharField(
         max_length=255,
-        verbose_name="公司"
+        verbose_name="公司",
+        default=""
     )
     position = models.CharField(
         max_length=255,
-        verbose_name="职位"
+        verbose_name="职位",
+        default=""
     )
     wx_openid = models.CharField(
         max_length=255,

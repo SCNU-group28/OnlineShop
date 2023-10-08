@@ -18,7 +18,6 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-# from apps.derivatives.views import QuotationView 这玩意是金融衍生品
 
 
 urlpatterns = [

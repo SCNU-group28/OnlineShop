@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 import os
 from distutils.util import strtobool
+
+#在部署项目时，只需要修改 .env 文件中的配置信息，而无需修改 settings.py 文件中的代码。
 import dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -45,7 +47,7 @@ ALLOWED_HOSTS = []
 APPS_PREFIX = "apps."
 # 包含所有应用程序
 APPS = [
-    # "account",      # 用户管理
+    "account",      # 用户管理
     "core",         # 核心功能
     # "common",       # 常用功能
     # "task",         # 任务队列
@@ -57,7 +59,7 @@ LOCAL_APPS = [
     f"{APPS_PREFIX}{app}" for app in APPS
 ]
 
-# 应用程序不是您的项目核心功能，但它们可能与您的项目密切相关
+# 应用程序不是项目核心功能，但它们and项目密切相关
 THIRD_PARTY_APPS = [
     'corsheaders',
     'django_crontab',
@@ -68,7 +70,6 @@ THIRD_PARTY_APPS = [
     'import_export'
 ]
 
-# 项目依赖的第三方库或插件
 INSTALLED_APPS = [
     'daphne',
     'django.contrib.admin',
@@ -81,8 +82,9 @@ INSTALLED_APPS = [
     *LOCAL_APPS,
 ]
 
+
 # 用于指定 Django 内置的用户认证系统所使用的用户模型。
-# AUTH_USER_MODEL = 'account.CustomUser'
+AUTH_USER_MODEL = 'account.CustomUser'
 
 # 用于存储 Django 中间件。Django 中间件是一种处理 HTTP 请求的程序，它们在请求到达视图函数之前或之后执行。
 # 例如设置Cookie等
