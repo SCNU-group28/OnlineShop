@@ -29,8 +29,12 @@ class UserSerializer(serializers.ModelSerializer):
         Returns:
             CustomUser: New user instance
         """
+
+        #密码单独拿出来，因为需要加密后才能存在数据库
         password = validated_data.pop("password")
+        #创建实例user
         user = get_user_model().objects.create_user(**validated_data)
+        #加密
         user.set_password(password)
         user.save()
         return user
