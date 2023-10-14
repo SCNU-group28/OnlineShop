@@ -50,3 +50,25 @@ class UserLoginSerializer(serializers.Serializer):
         max_length=128,
         required=True
     )
+
+class IsPasswordSerializer(serializers.Serializer):
+    email=serializers.CharField(
+       required=True
+    )
+    username = serializers.CharField(
+        max_length=150,
+        required=True
+    )
+
+class ResetSerializer(serializers.Serializer):
+    token=serializers.CharField(
+        required=True
+    )
+    username = serializers.CharField(
+        max_length=150,
+        required=True
+    )
+    password= serializers.CharField(
+        max_length=128,
+        required=True
+    )
