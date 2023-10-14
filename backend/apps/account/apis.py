@@ -1,6 +1,7 @@
 import os
 import requests
-
+from config.settings import email_inf
+from django.utils import timezone
 from apps.api.exceptions import ApplicationError
 from django.contrib.auth import get_user_model
 from drf_spectacular.types import OpenApiTypes
@@ -15,8 +16,11 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import CustomUser
-from .serializers import UserLoginSerializer, UserSerializer
+from .models import CustomUser,PasswordResetToken
+from .serializers import UserLoginSerializer, UserSerializer,IsPasswordSerializer,ResetSerializer
+from django.core.mail import send_mail
+from django.utils.crypto import get_random_string
+
 
 
 class UserRegisterApi(APIView):
@@ -191,6 +195,155 @@ class UserLoginApi(APIView):
             })
         else:
             raise ApplicationError("密码错误")
+
+class Is_PasswordApi(APIView):
+    """用户找回密码接口，用户名和邮箱正确即可
+
+    Raises:
+        ApplicationError: 用户名对应用户不存在
+        ApplicationError: 该用户邮箱输入错误或不存在
+
+    Returns:
+        send 找回密码的邮件
+    """
+    @extend_schema(
+        tags=['找回密码'],
+        description="找回密码(用户名+邮箱)",
+        methods=['POST'],
+        request=IsPasswordSerializer,
+        responses={
+            200: OpenApiTypes.OBJECT,
+            400: OpenApiTypes.OBJECT,
+        },
+        examples=[
+            OpenApiExample(
+                "输入成功",
+                response_only=True,
+                summary="输入成功",
+                status_codes=["200"],
+                description="用户找回密码输入成功",
+                value={
+                    "username": "test",
+                    "找回密码的邮件已发至您的邮箱" : "xxx"
+                }
+            ),
+            OpenApiExample(
+                "邮箱输入错误",
+                summary="邮箱输入错误",
+                response_only=True,
+                status_codes=["400"],
+                description="邮箱错误或不存在",
+                value={
+                    "message": "邮箱错误或不存在",
+                    "extra": {}
+                }
+            ),
+            OpenApiExample(
+                "用户不存在",
+                summary="用户不存在",
+                response_only=True,
+                status_codes=["400"],
+                description="用户名对应用户不存在",
+                value={
+                    "message": "用户名对应用户不存在",
+                    "extra": {}
+                }
+            ),
+        ]
+    )
+    def post(self, request: Request) -> Response:
+        serializer = IsPasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            user = get_user_model().objects.get(username=serializer.validated_data["username"])
+        except get_user_model().DoesNotExist:
+            raise ApplicationError("用户名对应用户不存在")
+        user = get_user_model().objects.get(username=serializer.validated_data["username"])
+        if user.email == serializer.validated_data["email"]:
+            token = get_random_string(length=6)
+            # 在数据库中创建 PasswordResetToken 来关联用户和令牌
+            PasswordResetToken.objects.create(user=user, token=token)
+            #创建完需要定期删除,放在Task应用下
+            # expiration_time = timezone.now() - timezone.timedelta(seconds=60)
+            # expired_tokens = PasswordResetToken.objects.filter(created_at__lt=expiration_time)
+            # expired_tokens.delete()
+            send_mail(
+                '重置密码',
+                message=f'欢迎使用我们的线上商城，您的令牌是{token}',
+                from_email=email_inf.EMAIL_FROM,
+                recipient_list=[user.email],
+            )
+            return Response({
+                "找回密码的令牌邮件已经发至您的预留邮箱，请查看！"
+            })
+        else:
+            raise ApplicationError("邮箱错误或不存在")
+
+class ResetPasswordApi(APIView):
+    """用户重新设定密码api
+
+    Raises:
+        ApplicationError: 令牌验证错误
+        ApplicationError: 请您先发送邮件得到令牌后再执行本操作
+    Returns:
+        send 找回密码的邮件
+    """
+    @extend_schema(
+        tags=['重设密码'],
+        description="重设密码(令牌+密码)",
+        methods=['POST'],
+        request=IsPasswordSerializer,
+        responses={
+            200: OpenApiTypes.OBJECT,
+            400: OpenApiTypes.OBJECT,
+        },
+        examples=[
+            OpenApiExample(
+                "重设成功",
+                response_only=True,
+                summary="重设成功",
+                status_codes=["200"],
+                description="用户密码重设成功",
+                value={
+                    '您的密码已经重新设置'
+                }
+            ),
+            OpenApiExample(
+                "令牌验证失败",
+                summary="令牌验证失败",
+                response_only=True,
+                status_codes=["400"],
+                description="您的令牌验证失败",
+                value={
+                    "message": "您的令牌验证失败",
+                    "extra": {}
+                }
+            ),
+        ]
+    )
+    def post(self, request: Request) -> Response:
+        serializer = ResetSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        username = serializer.validated_data['username']
+        user = get_user_model().objects.get(username=username)
+        try:
+            password_reset_token = PasswordResetToken.objects.get(user=user)
+            if serializer.validated_data['token'] == password_reset_token.token:
+                user = get_user_model().objects.get(username=serializer.validated_data['username'])
+                # 更新密码前，先使用 set_password 方法加密密码
+                user.set_password(serializer.validated_data['password'])
+                user.save()
+                return Response({
+                    "您的密码修改成功，请重新登录"
+                })
+            else:
+                return Response({
+                    "您的令牌验证失败"
+                })
+        except PasswordResetToken.DoesNotExist:
+            raise ApplicationError("请您先发送邮件得到令牌后再执行本操作")
+
+            
 
 
 class WXLoginApi(APIView):

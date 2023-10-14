@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
-
 
 class CustomUser(AbstractUser):
     """自定义用户模型"""
@@ -68,3 +68,18 @@ class CustomUser(AbstractUser):
     class Meta:
         verbose_name = verbose_name_plural = "用户"
         
+class PasswordResetToken(models.Model):
+    user = models.ForeignKey(
+        get_user_model(), 
+        on_delete=models.CASCADE
+        )
+    token = models.CharField(
+        max_length=32, 
+        unique=True
+        )
+    created_at = models.DateTimeField(
+        auto_now_add=True
+        )
+    
+    def __str__(self):
+        return f"PasswordResetToken for {self.user.username}"
