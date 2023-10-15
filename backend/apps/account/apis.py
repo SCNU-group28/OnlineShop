@@ -20,7 +20,7 @@ from .models import CustomUser,PasswordResetToken
 from .serializers import UserLoginSerializer, UserSerializer,IsPasswordSerializer,ResetSerializer
 from django.core.mail import send_mail
 from django.utils.crypto import get_random_string
-
+from apps.task.tasks import delete_password_reset_token
 
 
 class UserRegisterApi(APIView):
@@ -260,19 +260,24 @@ class Is_PasswordApi(APIView):
             raise ApplicationError("用户名对应用户不存在")
         user = get_user_model().objects.get(username=serializer.validated_data["username"])
         if user.email == serializer.validated_data["email"]:
-            token = get_random_string(length=6)
-            # 在数据库中创建 PasswordResetToken 来关联用户和令牌
-            PasswordResetToken.objects.create(user=user, token=token)
-            #创建完需要定期删除,放在Task应用下
-            # expiration_time = timezone.now() - timezone.timedelta(seconds=60)
-            # expired_tokens = PasswordResetToken.objects.filter(created_at__lt=expiration_time)
-            # expired_tokens.delete()
+            token_value = get_random_string(length=6)
+            # 在数据库中创建或者更新 PasswordResetToken 来关联用户和令牌
+            token, created = PasswordResetToken.objects.get_or_create(user=user)
+            # 如果记录已存在，更新 token 值
+            if not created:
+                token.token = token_value
+                token.save()
+            else:
+                token.token = token_value
+                token.save()
             send_mail(
                 '重置密码',
-                message=f'欢迎使用我们的线上商城，您的令牌是{token}',
+                message=f'您正在尝试找回密码，您的令牌是{token_value}',
                 from_email=email_inf.EMAIL_FROM,
                 recipient_list=[user.email],
             )
+            # 将对象的主键传递给Celery任务
+            delete_password_reset_token.apply_async(args=(token.pk,), countdown=60)
             return Response({
                 "找回密码的令牌邮件已经发至您的预留邮箱，请查看！"
             })
