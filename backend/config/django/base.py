@@ -132,23 +132,14 @@ if DEBUG:
         }
     }
 else:
-    DB_NAME = os.environ.get("DB_NAME", None)
-    DB_USER = os.environ.get("DB_USER", None)
-    DB_PSWD = os.environ.get("DB_PSWD", None)
-    DB_HOST = os.environ.get("DB_HOST", "127.0.0.1")
-    DB_PORT = os.environ.get("DB_PORT", "5432")
-    if not DB_NAME or not DB_USER or not DB_PSWD:
-        raise Exception("DB_NAME, DB_USER, DB_PSWD not found in .env file")
-# Database
-# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
     DATABASES = {
         'default': {
             'ENGINE': "django.db.backends.postgresql",
-            'NAME': DB_NAME,
-            'USER': DB_USER,
-            'PASSWORD': DB_PSWD,
-            'HOST': DB_HOST,
-            'PORT': DB_PORT,
+            'NAME': 'osdb',
+            'USER': 'osdb',
+            'PASSWORD': 'osdb',
+            'HOST': 'http://47.115.212.183/',
+            'PORT': 5432,
         }
     }
 
