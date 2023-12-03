@@ -196,4 +196,14 @@ MEDIA_ROOT = BASE_DIR.parent / "media"
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 from config.settings.email_inf import *
+from config.settings.channels import *
 from config.settings.celery import *
+from config.settings.rest_framework import *
+from config.settings.spectacular import *
+from config.settings.simplejwt import *
+from config.settings.cors import *
+from config.settings.sentry import *
+from config.settings.tinymce import *
+# from config.settings.cronjobs import *
+
+# from config.settings.simpleui import *
