@@ -25,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 #加载项目根目录父目录下的.env文件，并在控制台输出加载过程中的详细信息。
-dotenv.load_dotenv(dotenv_path=BASE_DIR.parent / ".env", verbose=True)
+dotenv.load_dotenv(dotenv_path=BASE_DIR / ".env", verbose=True)
 # SECURITY WARNING: keep the secret key used in production secret!
 # 一个配置变量，用于加密和验证一些敏感信息，例如会话 Cookie。
 SECRET_KEY = os.environ.get(
@@ -49,6 +49,7 @@ APPS_PREFIX = "apps."
 APPS = [
     "account",      # 用户管理
     "core",         # 核心功能
+    "goods",        #商品信息
     # "common",       # 常用功能
     "task",         # 任务队列
     # "dev",          # 开发管理
@@ -201,8 +202,8 @@ from config.settings.celery import *
 from config.settings.rest_framework import *
 from config.settings.spectacular import *
 from config.settings.simplejwt import *
-from config.settings.cors import *
-from config.settings.sentry import *
+# from config.settings.cors import *
+# from config.settings.sentry import *
 from config.settings.tinymce import *
 # from config.settings.cronjobs import *
 
